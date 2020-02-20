@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Objects.isNull;
+
 @Service
 public class AccountServiceImpl implements AccountService {
 
@@ -19,6 +21,13 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void createAccount(Account account) {
+        if (isNull(account)) {
+            throw new IllegalArgumentException("Invalid account");
+        }
+
+        if (isNull(account.getAccountKey())) {
+            throw new IllegalArgumentException("Invalid account key");
+        }
         accounts.put(account.getAccountKey(), account);
     }
 
@@ -29,6 +38,24 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void transfer(Account source, Account target, double amount) {
-        //do nothing for now
+        if (isNull(target) || isNull(source)) {
+            throw new IllegalArgumentException("Invalid account");
+        }
+
+        if (isNull(accounts.get(source.getAccountKey())) || isNull(accounts.get(target.getAccountKey()))) {
+            throw new IllegalArgumentException("Account doesn't exist");
+        }
+
+        //assuming amount cannot be negative
+        if (amount < 0) {
+            throw new IllegalArgumentException("Amount should be positive");
+        }
+
+        if (source.getBalance() < amount) {
+            throw new IllegalArgumentException("Insufficient funds");
+        }
+
+        source.setBalance(source.getBalance() - amount);
+        target.setBalance(target.getBalance() + amount);
     }
 }
