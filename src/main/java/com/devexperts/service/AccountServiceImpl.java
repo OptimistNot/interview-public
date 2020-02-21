@@ -2,6 +2,9 @@ package com.devexperts.service;
 
 import com.devexperts.account.Account;
 import com.devexperts.account.AccountKey;
+import com.devexperts.error.exception.AccountNotFoundException;
+import com.devexperts.error.exception.InsufficientAccountBalance;
+import com.devexperts.error.exception.InvalidAmountParameter;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -48,14 +51,35 @@ public class AccountServiceImpl implements AccountService {
 
         //assuming amount cannot be negative
         if (amount < 0) {
-            throw new IllegalArgumentException("Amount should be positive");
+            throw new InvalidAmountParameter("Amount should be positive");
         }
 
         if (source.getBalance() < amount) {
-            throw new IllegalArgumentException("Insufficient funds");
+            throw new InsufficientAccountBalance("Insufficient account balance");
         }
 
         source.setBalance(source.getBalance() - amount);
         target.setBalance(target.getBalance() + amount);
+    }
+
+    @Override
+    public void transfer(long sourceId, long targetId, double amount) {
+        Account source = accounts.get(AccountKey.valueOf(sourceId));
+
+        if (isNull(source)) {
+            throw new AccountNotFoundException("Source account doesn't exist");
+        }
+
+        Account target = accounts.get(AccountKey.valueOf(targetId));
+
+        if (isNull(target)) {
+            throw new AccountNotFoundException("Target account doesn't exist");
+        }
+
+        if (amount < 0) {
+            throw new InvalidAmountParameter("Amount should be positive");
+        }
+
+        transfer(source, target, amount);
     }
 }

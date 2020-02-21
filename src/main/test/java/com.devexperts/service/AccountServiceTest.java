@@ -1,8 +1,9 @@
-package com.devexperts;
+package com.devexperts.service;
 
 import com.devexperts.account.Account;
 import com.devexperts.account.AccountKey;
-import com.devexperts.service.AccountServiceImpl;
+import com.devexperts.error.exception.AccountNotFoundException;
+import com.devexperts.error.exception.InsufficientAccountBalance;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
@@ -129,7 +130,7 @@ public class AccountServiceTest {
         accountService.transfer(sourceAccount, targetAccount, -3.0);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = InsufficientAccountBalance.class)
     public void testTransferFundsInsufficientFunds() {
         //create source account
         AccountKey sourceAccountKey = AccountKey.valueOf(1L);
@@ -144,5 +145,44 @@ public class AccountServiceTest {
         accountService.createAccount(targetAccount);
 
         accountService.transfer(sourceAccount, targetAccount, 3.0);
+    }
+
+    @Test(expected = AccountNotFoundException.class)
+    public void testTransferFundsSourceAccountNotFound() {
+        //create target account
+        AccountKey targetAccountKey = AccountKey.valueOf(2L);
+        Account targetAccount = new Account(targetAccountKey, "john", "doe", 0.0);
+
+        accountService.createAccount(targetAccount);
+
+        accountService.transfer(1, 2, 2.0);
+    }
+
+    @Test(expected = AccountNotFoundException.class)
+    public void testTransferFundsTargetAccountNotFound() {
+        //create source account
+        AccountKey sourceAccountKey = AccountKey.valueOf(1L);
+        Account sourceAccount = new Account(sourceAccountKey, "john", "doe", 0.0);
+
+        accountService.createAccount(sourceAccount);
+
+        accountService.transfer(1, 2, 2.0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testTransferFundsNewNegativeAmount() {
+        //create source account
+        AccountKey sourceAccountKey = AccountKey.valueOf(1L);
+        Account sourceAccount = new Account(sourceAccountKey, "john", "doe", 0.0);
+
+        accountService.createAccount(sourceAccount);
+
+        //create target account
+        AccountKey targetAccountKey = AccountKey.valueOf(2L);
+        Account targetAccount = new Account(targetAccountKey, "john", "doe", 0.0);
+
+        accountService.createAccount(targetAccount);
+
+        accountService.transfer(1, 2, -2.0);
     }
 }
