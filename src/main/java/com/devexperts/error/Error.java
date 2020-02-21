@@ -1,4 +1,4 @@
-package com.devexperts.model;
+package com.devexperts.error;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;

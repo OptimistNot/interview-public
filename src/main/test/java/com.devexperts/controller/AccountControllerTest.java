@@ -2,8 +2,6 @@ package com.devexperts.controller;
 
 import com.devexperts.account.Account;
 import com.devexperts.account.AccountKey;
-import com.devexperts.model.Error;
-import com.devexperts.model.Transaction;
 import com.devexperts.service.AccountService;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AccountControllerTest {
 
-    private static final String TRANSACTION_URL = "/api/operations/transfer";
+    private static final String TRANSACTION_URL = "/api/operations/transfer?source_id=%s&target_id=%s&amount=%s";
 
     @Autowired
     private AccountService accountService;
@@ -38,9 +36,10 @@ public class AccountControllerTest {
         accountService.createAccount(createAccount(1, 10.0));
         accountService.createAccount(createAccount(2, 0.0));
 
-        ResponseEntity<Void> result = testRestTemplate.exchange(TRANSACTION_URL,
+        ResponseEntity<Void> result = testRestTemplate.exchange(
+                String.format(TRANSACTION_URL, "1", "2", "2.0"),
                 HttpMethod.POST,
-                new HttpEntity<>(createTransaction()),
+                null,
                 Void.class);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
@@ -50,9 +49,10 @@ public class AccountControllerTest {
     public void testSourceAccountNotFound() {
         accountService.createAccount(createAccount(2, 0.0));
 
-        ResponseEntity<Error> result = testRestTemplate.exchange(TRANSACTION_URL,
+        ResponseEntity<Error> result = testRestTemplate.exchange(
+                String.format(TRANSACTION_URL, "1", "2", "2.0"),
                 HttpMethod.POST,
-                new HttpEntity<>(createTransaction()),
+                null,
                 Error.class);
 
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
@@ -63,12 +63,10 @@ public class AccountControllerTest {
         accountService.createAccount(createAccount(1, 10.0));
         accountService.createAccount(createAccount(2, 0.0));
 
-        Transaction transaction = createTransaction();
-        transaction.setAmount(20.0);
-
-        ResponseEntity<Error> result = testRestTemplate.exchange(TRANSACTION_URL,
+        ResponseEntity<Error> result = testRestTemplate.exchange(
+                String.format(TRANSACTION_URL, "1", "2", "20.0"),
                 HttpMethod.POST,
-                new HttpEntity<>(transaction),
+                null,
                 Error.class);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
@@ -79,39 +77,27 @@ public class AccountControllerTest {
         accountService.createAccount(createAccount(1, 10.0));
         accountService.createAccount(createAccount(2, 0.0));
 
-        Transaction transaction = createTransaction();
-        transaction.setAmount(-2.0);
-
-        ResponseEntity<Error> result = testRestTemplate.exchange(TRANSACTION_URL,
+        ResponseEntity<Error> result = testRestTemplate.exchange(
+                String.format(TRANSACTION_URL, "1", "2", "-2.0"),
                 HttpMethod.POST,
-                new HttpEntity<>(transaction),
+                null,
                 Error.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
 
     @Test
-    public void testEmptyBody() {
+    public void testEmptyParameter() {
         accountService.createAccount(createAccount(1, 10.0));
         accountService.createAccount(createAccount(2, 0.0));
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-
-        ResponseEntity<Error> result = testRestTemplate.exchange(TRANSACTION_URL,
+        ResponseEntity<Error> result = testRestTemplate.exchange(
+                "/api/operations/transfer?source_id=1&target_id=2",
                 HttpMethod.POST,
-                new HttpEntity<>(null, httpHeaders),
+                null,
                 Error.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-    }
-
-    private Transaction createTransaction() {
-        return new Transaction.Builder()
-                .withSourceId(1)
-                .withTargetId(2)
-                .withAmount(2.0)
-                .build();
     }
 
     private Account createAccount(long id, double balance) {

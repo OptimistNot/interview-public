@@ -4,7 +4,6 @@ import com.devexperts.error.exception.AccountNotFoundException;
 import com.devexperts.error.exception.InsufficientAccountBalance;
 import com.devexperts.error.exception.InvalidAmountParameter;
 import com.devexperts.log.Loggable;
-import com.devexperts.model.Error;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
