@@ -4,6 +4,7 @@ import com.devexperts.account.Account;
 import com.devexperts.account.AccountKey;
 import com.devexperts.error.exception.AccountNotFoundException;
 import com.devexperts.error.exception.InsufficientAccountBalance;
+import com.devexperts.error.exception.InvalidAmountParameter;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
@@ -113,7 +114,7 @@ public class AccountServiceTest {
         accountService.transfer(sourceAccount, nonExistingAccount, 3.0);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = InvalidAmountParameter.class)
     public void testTransferFundsNegativeAmount() {
         //create source account
         AccountKey sourceAccountKey = AccountKey.valueOf(1L);
@@ -169,7 +170,7 @@ public class AccountServiceTest {
         accountService.transfer(1, 2, 2.0);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = InvalidAmountParameter.class)
     public void testTransferFundsNewNegativeAmount() {
         //create source account
         AccountKey sourceAccountKey = AccountKey.valueOf(1L);

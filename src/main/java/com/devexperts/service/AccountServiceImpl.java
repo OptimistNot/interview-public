@@ -7,15 +7,15 @@ import com.devexperts.error.exception.InsufficientAccountBalance;
 import com.devexperts.error.exception.InvalidAmountParameter;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.Objects.isNull;
 
 @Service
 public class AccountServiceImpl implements AccountService {
 
-    private Map<AccountKey, Account> accounts = new HashMap<>();
+    private final Map<AccountKey, Account> accounts = new ConcurrentHashMap<>();
 
     @Override
     public void clear() {
@@ -58,8 +58,10 @@ public class AccountServiceImpl implements AccountService {
             throw new InsufficientAccountBalance("Insufficient account balance");
         }
 
-        source.setBalance(source.getBalance() - amount);
-        target.setBalance(target.getBalance() + amount);
+        synchronized (this) {
+            source.setBalance(source.getBalance() - amount);
+            target.setBalance(target.getBalance() + amount);
+        }
     }
 
     @Override
